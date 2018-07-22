@@ -99,9 +99,9 @@ def post_transactions():
     mempool = Mempool()
     validator = Validator()
     body = request.json
-    transaction = Transaction.from_dict(body['transaction'])
-    if transaction.tx_hash != body['transaction']['tx_hash']:
-        logger.info("Invalid transaction hash: {} should be {}".format(body['transaction']['tx_hash'], transaction.tx_hash))
+    transaction = Transaction.from_dict(body['data'])
+    if transaction.tx_hash != body['data']['tx_hash']:
+        logger.info("Invalid transaction hash: {} should be {}".format(body['data']['tx_hash'], transaction.tx_hash))
         response.status = 406
         return json.dumps({'message': 'Invalid transaction hash'})
     if mempool.get_unconfirmed_transaction(transaction.tx_hash) is None \

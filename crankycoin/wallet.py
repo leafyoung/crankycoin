@@ -27,7 +27,10 @@ class Client(NodeMixin):
         self.check_peers()
 
     def get_public_key(self):
-        return self.__public_key__.format(compressed=True).encode('hex') if not _PY3 else codecs.encode(self.__public_key__.format(compressed=True), 'hex')
+      if not _PY3:
+        return self.__public_key__.format(compressed=True).encode('hex')
+      else:
+        return codecs.encode(self.__public_key__.format(compressed=True), 'hex').decode('utf-8')
 
     def get_private_key(self):
         return self.__private_key__.to_hex()
@@ -64,6 +67,17 @@ class Client(NodeMixin):
             amount,
             fee,
             prev_hash=prev_hash
+        )
+        transaction.sign(self.get_private_key())
+        return self.api_client.broadcast_transaction(transaction)
+
+    def create_transaction(self, to, amount, fee):
+        self.check_peers()
+        transaction = Transaction(
+            self.get_public_key(),
+            to,
+            amount,
+            fee
         )
         transaction.sign(self.get_private_key())
         return self.api_client.broadcast_transaction(transaction)

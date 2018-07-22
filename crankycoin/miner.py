@@ -25,8 +25,11 @@ class Miner(object):
 
     def start(self):
         logger.debug("mining process starting with reward address %s...", self.REWARD_ADDRESS)
+        # run parallel
         self.miner_process = mp.Process(target=self.mine)
         self.miner_process.start()
+        # run alone
+        # self.mine()
 
     def shutdown(self):
         logger.debug("mining process with reward address %s shutting down...", self.REWARD_ADDRESS)
@@ -65,6 +68,7 @@ class Miner(object):
         coinbase_prev_hash = "0" if new_block_height == 1 \
             else self.blockchain.get_coinbase_hash_by_block_hash(previous_hash)
         # coinbase
+        # print(new_block_height)
         coinbase = Transaction(
             "0",
             self.REWARD_ADDRESS,

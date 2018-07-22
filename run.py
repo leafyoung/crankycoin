@@ -11,6 +11,7 @@ import time
 from getpass import getpass
 from Cryptodome.Cipher import AES
 import codecs
+import base64
 
 from crankycoin import config, logger
 from crankycoin.node import FullNode
@@ -41,12 +42,13 @@ def client():
     peers = Peers()
     api_client = ApiClient(peers)
     encrypted = config['user']['encrypted_private_key']
-    if encrypted is None:
+    if encrypted is None or encrypted == "":
         print("\n\nNo private key provided. A new wallet will be generated for you...\n\n")
         wallet = Client(peers, api_client)
     else:
         passphrase = getpass("Enter passphrase: ")
-        encrypted = codecs.decode(encrypted, 'hex')
+        # encrypted = codecs.decode(encrypted, 'hex')
+        encrypted = base64.b64decode(encrypted)
         nonce = encrypted[0:16]
         tag = encrypted[16:32]
         ciphertext = encrypted[32:]

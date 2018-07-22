@@ -2,6 +2,7 @@ import coincurve
 import hashlib
 import json
 import time
+import codecs
 
 from crankycoin.models.enums import TransactionType
 
@@ -102,13 +103,15 @@ class Transaction(object):
             "prev_hash": self._prev_hash,
             "signature": self._signature
         }
+        print(data)
         data_json = json.dumps(data, sort_keys=True)
         hash_object = hashlib.sha256(data_json.encode('utf-8'))
         return hash_object.hexdigest()
 
     def sign(self, private_key):
-        signature = codecs.encode(coincurve.PrivateKey.from_hex(private_key).sign(self.to_signable()), 'hex')
-        self._signature = signature
+        print(self.to_signable())
+        signature = codecs.encode(coincurve.PrivateKey.from_hex(private_key).sign(self.to_signable().encode()), 'hex')
+        self._signature = signature.decode('utf-8')
         self._tx_hash = self._calculate_tx_hash()
         return signature
 
@@ -126,7 +129,7 @@ class Transaction(object):
         ))
 
     def verify(self):
-        return coincurve.PublicKey(codecs.decode(self._source, 'hex')).verify(codecs.decode(self._signature, 'hex'), self.to_signable())
+        return coincurve.PublicKey(codecs.decode(self._source, 'hex')).verify(codecs.decode(self._signature.encode('utf-8'), 'hex'), self.to_signable().encode())
 
     def to_json(self):
         return json.dumps(self, default=lambda o: {key.lstrip('_'): value for key, value in o.__dict__.items()},

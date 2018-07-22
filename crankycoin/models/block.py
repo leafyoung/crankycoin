@@ -122,11 +122,11 @@ class Block(object):
             for i in range(0, len(merkle_base), 2):
                 if i == len(merkle_base) - 1:
                     temp_merkle_base.append(
-                        hashlib.sha256(merkle_base[i]).hexdigest()
+                        hashlib.sha256(merkle_base[i].encode()).hexdigest()
                     )
                 else:
                     temp_merkle_base.append(
-                        hashlib.sha256(merkle_base[i] + merkle_base[i+1]).hexdigest()
+                        hashlib.sha256((merkle_base[i] + merkle_base[i+1]).encode()).hexdigest()
                     )
             merkle_base = temp_merkle_base
         return merkle_base[0]

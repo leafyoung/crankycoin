@@ -1,6 +1,6 @@
 user:
-    public_key: ""
-    encrypted_private_key: ""
+    public_key: "033ab293cbe87fd7b174f7085613459bbcf67df4e59a4bde80e45c1149a82a2633"
+    encrypted_private_key: "U9xBtR/i8L1V1PwKpeSQvzRjv3SMl3JFOKNW/n/eYOk/OgzY68bBt73HDrFemPfNTzfmKjpQ5KHYJJyoHBMDTUOsgbAY16Jys5I1K5kFkC5GxygI76cjt+9OrPypo1Oq"
     ip: "127.0.0.1"
     chain_db: "./data/chaindata.db"
     pool_db: "./data/pool.db"

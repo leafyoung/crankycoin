@@ -233,7 +233,11 @@ class Blockchain(object):
     def get_reward(self, height):
         precision = pow(10, self.SIGNIFICANT_DIGITS)
         reward = self.INITIAL_COINS_PER_BLOCK
-        for i in range(1, ((height / self.HALVING_FREQUENCY) + 1)):
+        # precision: 1
+        # reward: 100000000
+        # height: 50
+        # self.HALVING_FREQUENCY: 1
+        for i in range(1, (floor(height / self.HALVING_FREQUENCY) + 1)):
             reward = floor((reward / 2.0) * precision) / precision
         return reward
 

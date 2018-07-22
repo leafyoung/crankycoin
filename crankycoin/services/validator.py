@@ -34,47 +34,47 @@ class Validator(object):
         reward_amount = self.blockchain.get_reward(block.height)
         for transaction in block.transactions[1:]:
             if TransactionType(transaction.tx_type) == TransactionType.COINBASE:
-                logger.warn("Block not valid.  Multiple coinbases detected")
+                logger.warning("Block not valid.  Multiple coinbases detected")
                 return False
             reward_amount += transaction.fee
         # first transaction is coinbase
         reward_transaction = block.transactions[0]
         if TransactionType(reward_transaction.tx_type) != TransactionType.COINBASE:
-            logger.warn("Block not valid.  Missing coinbase")
+            logger.warning("Block not valid.  Missing coinbase")
             return False
         if reward_transaction.amount != reward_amount:
-            logger.warn("Invalid block reward {} should be {}".format(reward_transaction.amount, reward_amount))
+            logger.warning("Invalid block reward {} should be {}".format(reward_transaction.amount, reward_amount))
             return False
         if reward_transaction.source != "0":
-            logger.warn("Invalid Coinbase source")
+            logger.warning("Invalid Coinbase source")
             return False
         return True
 
     def validate_block_header(self, block_header, transactions_inv):
         if self.blockchain.get_block_header_by_hash(block_header.hash):
-            logger.warn('Block Header already exists')
+            logger.warning('Block Header already exists')
             return False
         if block_header.version != config['network']['version']:
-            logger.warn('Incompatible version')
+            logger.warning('Incompatible version')
             return False
         if block_header.merkle_root != self.calculate_merkle_root(transactions_inv):
-            logger.warn('Invalid merkle root')
+            logger.warning('Invalid merkle root')
             return False
         previous_block = self.blockchain.get_block_header_by_hash(block_header.previous_hash)
         if previous_block is None:
             return None
         previous_block_header, previous_block_branch, previous_block_height = previous_block
         if self.blockchain.calculate_hash_difficulty(previous_block_height + 1) > block_header.hash_difficulty:
-            logger.warn('Invalid hash difficulty')
+            logger.warning('Invalid hash difficulty')
             return False
         return previous_block_height + 1
 
     def validate_block(self, block, merkle_root):
         if block.block_header.merkle_root != merkle_root:
-            logger.warn("invalid merkle root")
+            logger.warning("invalid merkle root")
             return False
         if not self.check_block_reward(block):
-            logger.warn("Invalid block reward")
+            logger.warning("Invalid block reward")
             return False
         return True
 
@@ -91,7 +91,7 @@ class Validator(object):
         block_transactions = []
         for tx_hash in transactions_inv:
             if self.blockchain.find_duplicate_transactions(tx_hash):
-                logger.warn('Transaction not valid.  Double-spend prevented: {}'.format(tx_hash))
+                logger.warning('Transaction not valid.  Double-spend prevented: {}'.format(tx_hash))
                 return False
             transaction = self.mempool.get_unconfirmed_transaction(tx_hash)
             if transaction is None:
@@ -109,14 +109,14 @@ class Validator(object):
         :rtype: boolean
         """
         if self.blockchain.find_duplicate_transactions(transaction.tx_hash):
-            logger.warn('Transaction not valid.  Double-spend prevented: {}'.format(transaction.tx_hash))
+            logger.warning('Transaction not valid.  Double-spend prevented: {}'.format(transaction.tx_hash))
             return False
         if not transaction.verify():
-            logger.warn('Transaction not valid.  Invalid transaction signature: {}'.format(transaction.tx_hash))
+            logger.warning('Transaction not valid.  Invalid transaction signature: {}'.format(transaction.tx_hash))
             return False
         balance = self.blockchain.get_balance(transaction.source)
         if transaction.amount + transaction.fee > balance:
-            logger.warn('Transaction not valid.  Insufficient funds: {}'.format(transaction.tx_hash))
+            logger.warning('Transaction not valid.  Insufficient funds: {} {}<{}'.format(transaction.tx_hash, balance, transaction.amount + transaction.fee))
             return False
         return True
 
