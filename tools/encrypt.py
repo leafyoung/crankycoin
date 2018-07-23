@@ -2,13 +2,12 @@
 
 from __future__ import print_function
 
-import codecs
-import hashlib
 from getpass import getpass
 import sys
 
-from Cryptodome.Cipher import AES
 import base64
+import hashlib
+from Cryptodome.Cipher import AES
 
 _PY3 = sys.version_info[0] > 2
 if not _PY3:
@@ -30,19 +29,12 @@ de_cipher = AES.new(hashedpass, AES.MODE_EAX, cipher.nonce)
 private_key = de_cipher.decrypt_and_verify(ciphertext, tag)
 
 print("Decrypted private key: ")
-print(private_key)
-
-print("secret: {}".format(secret))
-print("hashedpass: {} {}".format(hashedpass, len(hashedpass)))
-print("nonce: {} {}".format(cipher.nonce, len(cipher.nonce)))
-print("tag: {} {}".format(tag, len(tag)))
-print("ciphertext: {} {}".format(ciphertext, len(ciphertext)))
+print(private_key.decode())
 
 if not _PY3:
   combined = "{}{}{}".format(cipher.nonce, tag, ciphertext)
 else:
   combined = cipher.nonce + tag + ciphertext
-print(combined)
 
 print("Encrypted private key: ")
 if not _PY3:
@@ -50,3 +42,4 @@ if not _PY3:
 else:
     print(base64.b64encode(combined).decode('utf-8'))
     # print(codecs.encode(combined.encode('utf-8'), 'hex').decode())
+

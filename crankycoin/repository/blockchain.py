@@ -38,17 +38,23 @@ class Blockchain(object):
         status = False
         branch = self.get_branch_by_hash(block.block_header.previous_hash)
         max_height = self.get_height()
-        if block.height > max_height:
-            # we're working on the tallest branch
-            if branch > 0:
-                # if an alternate branch is the tallest branch, it becomes our primary branch
-                self.restructure_primary_branch(branch)
-                branch = 0
+        print("[add_block] block.height: {}".format(block.height))
+        print("[add_block] max_height: {}".format(max_height))
+        if max_height is None:
+            # This is Genesis block
+            branch = 0
         else:
-            # we're not on the tallest branch, so there could be a split here
-            competing_branches = self.get_branches_by_prevhash(block.block_header.previous_hash)
-            if competing_branches and branch in competing_branches:
-                branch = self.get_new_branch_number(block.block_header.hash, block.height)
+            if block.height > max_height:
+                # we're working on the tallest branch
+                if branch > 0:
+                    # if an alternate branch is the tallest branch, it becomes our primary branch
+                    self.restructure_primary_branch(branch)
+                    branch = 0
+            else:
+                # we're not on the tallest branch, so there could be a split here
+                competing_branches = self.get_branches_by_prevhash(block.block_header.previous_hash)
+                if competing_branches and branch in competing_branches:
+                    branch = self.get_new_branch_number(block.block_header.hash, block.height)
 
         sql_strings = list()
         sql_strings.append("INSERT INTO blocks (hash, prevhash, merkleRoot, height, nonce, timestamp, version, branch" +
@@ -56,16 +62,8 @@ class Blockchain(object):
                            .format(block.block_header.hash, block.block_header.previous_hash,
                                    block.block_header.merkle_root, block.height, block.block_header.nonce,
                                    block.block_header.timestamp, block.block_header.version, branch))
-        for transaction in block.transactions:
-            sql_strings.append("INSERT INTO transactions (hash, src, dest, amount, fee, timestamp, signature, type," +
-                               " blockHash, asset, data, branch, prevHash)" +
-                               " VALUES ('{}', '{}', '{}', {}, {}, {}, '{}', {},'{}', '{}', '{}', {}, '{}')".format(
-                                    transaction.tx_hash, transaction.source, transaction.destination,
-                                    transaction.amount, transaction.fee, transaction.timestamp, transaction.signature,
-                                    transaction.tx_type, block.block_header.hash, transaction.asset, transaction.data,
-                                    branch, transaction.prev_hash))
-        sql_strings.append("UPDATE branches SET currentHash = '{}', currentHeight = {} WHERE id = {}".format(
-                            block.block_header.hash, block.height, branch))
+        
+        print(sql_strings)
 
         try:
             with sqlite3.connect(self.CHAIN_DB) as conn:
@@ -75,6 +73,46 @@ class Blockchain(object):
                 status = True
         except sqlite3.OperationalError as err:
             logger.error("Database Error: ", err.message)
+
+        sql_strings = list()
+        for transaction in block.transactions:
+            sql_strings.append("INSERT INTO transactions (hash, src, dest, amount, fee, timestamp, signature, type," +
+                               " blockHash, asset, data, branch, prevHash)" +
+                               " VALUES ('{}', '{}', '{}', {}, {}, {}, '{}', {},'{}', '{}', '{}', {}, '{}')".format(
+                                    transaction.tx_hash, transaction.source, transaction.destination,
+                                    transaction.amount, transaction.fee, transaction.timestamp, transaction.signature,
+                                    transaction.tx_type, block.block_header.hash, transaction.asset, transaction.data,
+                                    branch, transaction.prev_hash))
+
+        print(sql_strings)
+        try:
+            with sqlite3.connect(self.CHAIN_DB) as conn:
+                cursor = conn.cursor()
+                for sql in sql_strings:
+                    cursor.execute(sql)
+                status = True
+        except sqlite3.OperationalError as err:
+            logger.error("Database Error: ", err.message)
+
+        sql_strings = list()
+        if max_height is None:
+            sql_strings.append("INSERT INTO branches (id, currentHash, currentHeight) " +
+                               "VALUES ({}, '{}', 1)".format(
+                                branch, block.block_header.hash))
+        else:
+            sql_strings.append("UPDATE branches SET currentHash = '{}', currentHeight = {} WHERE id = {}".format(
+                                block.block_header.hash, block.height, branch))
+
+        print(sql_strings)
+        try:
+            with sqlite3.connect(self.CHAIN_DB) as conn:
+                cursor = conn.cursor()
+                for sql in sql_strings:
+                    cursor.execute(sql)
+                status = True
+        except sqlite3.OperationalError as err:
+            logger.error("Database Error: ", err.message)
+
         return status
 
     def get_new_branch_number(self, block_hash, height):
@@ -217,8 +255,14 @@ class Blockchain(object):
         height = block_height
 
         if height > self.DIFFICULTY_ADJUSTMENT_SPAN:
-            bd_header, bd_branch, bd_height = self.get_block_headers_by_height(height - self.DIFFICULTY_ADJUSTMENT_SPAN)
+            # bd_header, bd_branch, bd_height = self.get_block_headers_by_height(height - self.DIFFICULTY_ADJUSTMENT_SPAN)
+            block_headers_at_height = self.get_block_headers_by_height(height - self.DIFFICULTY_ADJUSTMENT_SPAN)
+            print(block_headers_at_height)
+            block_headers_at_height = sorted(block_headers_at_height, key=lambda x: x[0].timestamp)
+            # earliest timestamp
+            bd_header, bd_branch, bd_height = block_headers_at_height[0]
             timestamp_delta = block_header.timestamp - bd_header.timestamp
+            print("[calculate_hash_difficulty] timestamp_delta: {} diff:{}".format(timestamp_delta, self.TARGET_TIME_PER_BLOCK * self.DIFFICULTY_ADJUSTMENT_SPAN))
             # blocks were mined quicker than target
             if timestamp_delta < (self.TARGET_TIME_PER_BLOCK * self.DIFFICULTY_ADJUSTMENT_SPAN):
                 return block_header.hash_difficulty + 1
@@ -233,10 +277,6 @@ class Blockchain(object):
     def get_reward(self, height):
         precision = pow(10, self.SIGNIFICANT_DIGITS)
         reward = self.INITIAL_COINS_PER_BLOCK
-        # precision: 1
-        # reward: 100000000
-        # height: 50
-        # self.HALVING_FREQUENCY: 1
         for i in range(1, (floor(height / self.HALVING_FREQUENCY) + 1)):
             reward = floor((reward / 2.0) * precision) / precision
         return reward
@@ -278,8 +318,19 @@ class Blockchain(object):
             cursor = conn.cursor()
             cursor.execute(sql)
             for block in cursor:
-                block_headers.append(BlockHeader(block[1], block[2], block[5], block[4], block[6])), block[7], block[3]
+                block_headers.append((BlockHeader(block[1], block[2], block[5], block[4], block[6]), block[7], block[3]))
         return block_headers
+        # Blockheader(previous_hash, merkle_root, timestamp=None, nonce=0, version=None)
+        # block_header, block_branch, block_height
+        # [0]: hash
+        # [1]: prevHash
+        # [2]: merkleRoot
+        # [5]: timestamp
+        # [4]: nonce
+        # [6]: version
+
+        #- [3]: height
+        #- [7]: branch
 
     def get_block_header_by_hash(self, block_hash):
         # returns tuple of BlockHeader, branch, height

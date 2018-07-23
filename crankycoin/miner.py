@@ -8,7 +8,6 @@ from crankycoin.models.enums import MessageType, TransactionType
 from crankycoin.services.queue import Queue
 from crankycoin import config, logger
 
-
 class Miner(object):
 
     HOST = config['user']['ip']
@@ -60,6 +59,7 @@ class Miner(object):
             previous_hash = ""
 
         transactions = self.mempool.get_unconfirmed_transactions_chunk(self.MAX_TRANSACTIONS_PER_BLOCK)
+        print("[mine_block] len(transactions):{}".format(len(transactions)))
         if transactions is None or len(transactions) == 0:
             fees = 0
         else:
@@ -67,8 +67,8 @@ class Miner(object):
 
         coinbase_prev_hash = "0" if new_block_height == 1 \
             else self.blockchain.get_coinbase_hash_by_block_hash(previous_hash)
+        
         # coinbase
-        # print(new_block_height)
         coinbase = Transaction(
             "0",
             self.REWARD_ADDRESS,
@@ -78,13 +78,24 @@ class Miner(object):
             tx_type=TransactionType.COINBASE.value,
             signature=""
         )
+
+        print("[mine_block] new_block_height: {}".format(new_block_height))
+        for t in range(len(transactions)):
+            print("B: {} {}".format(t, transactions[t].prev_hash))
+            transactions[t].prev_hash = transactions[t].tx_hash            
+            print("A: {} {}".format(t, transactions[t].prev_hash))
+
         transactions.insert(0, coinbase)
 
         timestamp = int(time.time())
         i = 0
         block = Block(new_block_height, transactions, previous_hash, timestamp)
 
-        while block.block_header.hash_difficulty < self.blockchain.calculate_hash_difficulty():
+        print("[mine_block] new_block_height: {}".format(new_block_height))
+        print("[mine_block] block.block_header.hash_difficulty: {}".format(block.block_header.hash_difficulty))
+        acc = self.blockchain.calculate_hash_difficulty()
+        while block.block_header.hash_difficulty < acc:
+            print("[mine_block] self.blockchain.calculate_hash_difficulty(): {}".format(acc))
             latest_block = self.blockchain.get_tallest_block_header()
             if latest_block is not None:
                 latest_block_header = latest_block[0]
@@ -94,4 +105,6 @@ class Miner(object):
                     return None
             i += 1
             block.block_header.nonce = i
+            acc = self.blockchain.calculate_hash_difficulty()
+            # print("[mine_block] block.block_header.nonce: {}".format(block.block_header.nonce))
         return block

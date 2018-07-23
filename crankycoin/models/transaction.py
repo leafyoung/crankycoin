@@ -80,6 +80,10 @@ class Transaction(object):
     def prev_hash(self):
         return self._prev_hash
 
+    @prev_hash.setter
+    def prev_hash(self, value):
+        self._prev_hash = value
+
     @property
     def signature(self):
         return self._signature
@@ -103,13 +107,11 @@ class Transaction(object):
             "prev_hash": self._prev_hash,
             "signature": self._signature
         }
-        print(data)
         data_json = json.dumps(data, sort_keys=True)
         hash_object = hashlib.sha256(data_json.encode('utf-8'))
         return hash_object.hexdigest()
 
     def sign(self, private_key):
-        print(self.to_signable())
         signature = codecs.encode(coincurve.PrivateKey.from_hex(private_key).sign(self.to_signable().encode()), 'hex')
         self._signature = signature.decode('utf-8')
         self._tx_hash = self._calculate_tx_hash()

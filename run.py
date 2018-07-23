@@ -10,7 +10,6 @@ import sys
 import time
 from getpass import getpass
 from Cryptodome.Cipher import AES
-import codecs
 import base64
 
 from crankycoin import config, logger
@@ -47,7 +46,6 @@ def client():
         wallet = Client(peers, api_client)
     else:
         passphrase = getpass("Enter passphrase: ")
-        # encrypted = codecs.decode(encrypted, 'hex')
         encrypted = base64.b64decode(encrypted)
         nonce = encrypted[0:16]
         tag = encrypted[16:32]

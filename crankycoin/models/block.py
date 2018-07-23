@@ -39,15 +39,18 @@ class BlockHeader(object):
             r=1,
             p=1,
             dkLen=32)
-        return codecs.encode(hash_object, 'hex')
+        return codecs.encode(hash_object, 'hex').decode('utf-8')
 
     @property
     def hash_difficulty(self):
         difficulty = 0
-        for c in self.hash:
+        hh = self.hash
+        print("[hash_difficulty] self.hash:{}".format(hh))
+        for c in hh:
             if c != '0':
                 break
             difficulty += 1
+        print("[hash_difficulty] difficulty:{}".format(difficulty))
         return difficulty
 
     def to_json(self):

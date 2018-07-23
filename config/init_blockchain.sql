@@ -46,6 +46,9 @@ CREATE TABLE IF NOT EXISTS branches(
 --INSERT INTO branches (id, currentHash, currentHeight)
 --    VALUES (0, 'd30051890fe899813f441bd1e93d34790cbb44702668abca4cd8a380aa90e943', 1);
 --
+
+-- GENESIS = 1
+-- COINBASE = 2
 --INSERT INTO transactions (
 --    hash, src, dest, amount, fee, timestamp, signature, type, blockHash, asset, data, branch, prevHash) VALUES (
 --    '96409c929a70a52f1219b3eb3b064c9351f744b8e5023240013f30be572ac70a', '0',

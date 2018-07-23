@@ -59,18 +59,6 @@ class Client(NodeMixin):
             node = random.sample(peers, 1)[0]
         return self.api_client.get_transaction_history(address, node)
 
-    def create_transaction(self, to, amount, fee, prev_hash):
-        self.check_peers()
-        transaction = Transaction(
-            self.get_public_key(),
-            to,
-            amount,
-            fee,
-            prev_hash=prev_hash
-        )
-        transaction.sign(self.get_private_key())
-        return self.api_client.broadcast_transaction(transaction)
-
     def create_transaction(self, to, amount, fee):
         self.check_peers()
         transaction = Transaction(

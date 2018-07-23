@@ -134,7 +134,6 @@ class ApiClient(object):
         return
 
     # Light Client
-
     def get_balance(self, address=None, node=None):
         url = self.BALANCE_URL.format(node, self.FULL_NODE_PORT, address)
         try:

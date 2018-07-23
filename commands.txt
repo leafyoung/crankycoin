@@ -17,3 +17,5 @@ http://ec2-13-250-56-8.ap-southeast-1.compute.amazonaws.com:30013/height/
 http://ec2-13-250-56-8.ap-southeast-1.compute.amazonaws.com:30013/address/balance
 
 send 033ab293cbe87fd7b174f7085613459bbcf67df4e59a4bde80e45c1149a82a2633 100 10
+
+send 033ab293cbe87fd7b174f7085613459bbcf67df4e59a4bde80e45c1149a82a2633 0 0
