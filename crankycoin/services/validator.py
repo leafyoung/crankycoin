@@ -109,10 +109,10 @@ class Validator(object):
         :rtype: boolean
         """
         if self.blockchain.find_duplicate_transactions(transaction.tx_hash):
-            logger.warning('Transaction not valid.  Double-spend prevented: {}'.format(transaction.tx_hash))
+            logger.warning('Transaction not valid. Double-spend prevented: {}'.format(transaction.tx_hash))
             return False
         if not transaction.verify():
-            logger.warning('Transaction not valid.  Invalid transaction signature: {}'.format(transaction.tx_hash))
+            logger.warning('Transaction not valid. Invalid transaction signature: {}'.format(transaction.tx_hash))
             return False
         balance = self.blockchain.get_balance(transaction.source)
         if transaction.amount + transaction.fee > balance:
