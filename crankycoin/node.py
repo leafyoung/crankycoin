@@ -63,7 +63,7 @@ class FullNode(NodeMixin):
         mp_logger = mp.get_logger()
         mp_logger.setLevel(logging.DEBUG)
         self.app = Bottle()
-        self.app.merge(public_app)79
+        self.app.merge(public_app)
         self.app.merge(permissioned_app)
         self.blockchain = blockchain
         self.mempool = mempool
