@@ -16,8 +16,7 @@ network:
     version: 1
     initial_coins_per_block: 500
     halving_frequency: 210000
-    max_transactions_per_block: 10
-    # 2000
+    max_transactions_per_block: 10 # 2000
     minimum_hash_difficulty: 1
     target_time_per_block: 10 # 600
     difficulty_adjustment_span: 10 # 500

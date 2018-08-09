@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# python run.py client
+#   balance
+#   send 033ab293cbe87fd7b174f7085613459bbcf67df4e59a4bde80e45c1149a82a2633 100 10
+# python run.py full
+#   mine start
+#   mine stop
 
 from __future__ import print_function
 
